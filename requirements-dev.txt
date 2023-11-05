@@ -4,6 +4,7 @@ codespell
 flake8
 isort
 mypy
+pymemcache
 pytest
 pytest-cov
 pytest-django

@@ -5,6 +5,7 @@ from django.test import modify_settings
 from django.test import override_settings
 from django.test import TestCase
 from django.urls import reverse
+from pymemcache.exceptions import MemcacheServerError
 from wagtail import hooks
 from wagtail.models import PageViewRestriction
 
@@ -614,3 +615,14 @@ class WagtailCacheTest(TestCase):
         self.assertEqual(hook_fns, [hook_any])
         # The page should be cached normally due to hook returning garbage.
         self.test_page_hit()
+
+    @override_settings(WAGTAIL_CACHE_BACKEND="memcached")
+    def test_memcached_too_many_urls(self):
+        path = reverse("template_response_view")
+        long_param_value = "1234567890" * 100
+
+        with self.assertRaisesRegex(
+            MemcacheServerError, "object too large for cache"
+        ):
+            for n in range(5000):
+                self.client.get(path, {str(n): long_param_value})
